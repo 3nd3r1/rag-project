@@ -2,3 +2,4 @@ pandas
 numpy
 chromadb
 sentence_transformers
+argparse

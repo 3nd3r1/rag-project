@@ -28,3 +28,22 @@ class VectorStore:
                 documents=batch_chunks,
             )
         logging.info(f"Added {len(chunks)} chunks to the vector store.")
+
+    def search(self, query: str, n_results: int = 10) -> list[dict]:
+        results = self._collection.query(
+            query_texts=[query],
+            n_results=n_results,
+        )
+
+        docs = []
+        for i in range(len(results["ids"][0])):
+            docs.append(
+                {
+                    "id": results["ids"][0][i],
+                    "text": results["documents"][0][i],  # type: ignore
+                    "metadata": results["metadatas"][0][i],  # type: ignore
+                    "distance": results["distances"][0][i],  # type: ignore
+                }
+            )
+
+        return docs
