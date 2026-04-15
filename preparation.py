@@ -66,11 +66,33 @@ def create_region_texts(df: pd.DataFrame) -> list[str]:
     return [create_region_text(region_row) for _, region_row in region_rows.iterrows()]
 
 
+def create_category_text(row: pd.Series) -> str:
+    return (
+        f"Category summary for {row['Category']}: "
+        f"Total sales {row['total_sales']:.2f}, "
+        f"Total profit {row['total_profit']:.2f}."
+    )
+
+
+def create_category_texts(df: pd.DataFrame) -> list[str]:
+    category_rows = (
+        df.groupby("Category")
+        .agg(
+            total_sales=("Sales", "sum"),
+            total_profit=("Profit", "sum"),
+        )
+        .reset_index()
+    )
+
+    return [create_category_text(row) for _, row in category_rows.iterrows()]
+
+
 def create_texts(df: pd.DataFrame) -> list[str]:
     texts = []
     texts += create_row_texts(df)
     texts += create_month_texts(df)
     texts += create_region_texts(df)
+    texts += create_category_texts(df)
 
     return texts
 
