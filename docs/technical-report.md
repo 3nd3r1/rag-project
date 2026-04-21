@@ -126,3 +126,7 @@ RAG_TEMPLATE = PromptTemplate.from_template(
    - I uses Groq
 5. Using a jupyter notebook or CLi executable
    - I went with a CLI executable since I am not fond of Jupyter notebooks.
+
+## AI Usage
+
+- After generating 2 test cases manually I asked Claude to generate the rest of the test cases for me.
