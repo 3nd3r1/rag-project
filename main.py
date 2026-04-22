@@ -30,6 +30,7 @@ def prepare():
 
     with console.status("Storing embeddings..."):
         store = VectorStore()
+        store.clear()
         store.add_chunks(chunks)
     console.print(f"[green]✓[/green] Stored {len(chunks)} chunks in vector store")
 
