@@ -12,6 +12,8 @@ Result: [test-reports/report1.md](./test-reports/report1.md)
 ## Version 2
 
 - Fixed the judge prompt
+- Missing sub-category texts
+- Comparative queries performed poorly
 - A lot of missing data in the context
 
 Commit: https://github.com/3nd3r1/ledger/commit/86aa0fb6ea532154bd1576cec096c170f0a62984
