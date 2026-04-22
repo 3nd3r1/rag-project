@@ -160,7 +160,9 @@ def create_subcategory_text(row: pd.Series) -> tuple[str, dict]:
     text = (
         f"Sub-Category summary for {row['Sub-Category']}: "
         f"Total sales ${row['total_sales']:.2f}, "
-        f"Total profit ${row['total_profit']:.2f}."
+        f"Total profit ${row['total_profit']:.2f}, "
+        f"Total orders {row['total_orders']}, "
+        f"Total discounted orders {row['total_discounted_orders']}."
     )
     metadata = {"type": "subcategory_summary", "sub_category": row["Sub-Category"]}
     return text, metadata
@@ -172,6 +174,8 @@ def create_subcategory_texts(df: pd.DataFrame) -> list[tuple[str, dict]]:
         .agg(
             total_sales=("Sales", "sum"),
             total_profit=("Profit", "sum"),
+            total_orders=("Order ID", "nunique"),
+            total_discounted_orders=("is_discounted", "sum"),
         )
         .reset_index()
     )
