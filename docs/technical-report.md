@@ -6,12 +6,13 @@
 - RAG: data is converted into natural language text chunks, embedded into a vector database, retrieved at query to provide context for LLM that generates the final answer.
 - CSV → Pandas → text representations → chunking → ChromaDB → query → search → retrieved context → LLM → response
 
-Project modules:
+### Modules
 
 - `main.py` (entrypoint)
 - `data_preparation.py` (loading, text conversion, chunking),
 - `vector_store.py` (ChromaDB wrapper),
 - `rag_pipeline.py` (retrieval and LLM generation via LangChain).
+- `evaluation.py` (Evaluation of sample queries).
 
 ## Data Preprocessing and Chunking
 
