@@ -154,7 +154,7 @@ def write_report(results: list[dict], path: str):
         f.write("\n".join(lines))
 
 
-def run_tests(report_path: str | None = None):
+def run_evaluation(report_path: str | None = None):
     store = VectorStore()
     rag = RAGPipeline(store)
 

@@ -9,7 +9,7 @@ from rich.rule import Rule
 
 from preparation import chunk_texts, create_texts, read_data
 from rag_pipeline import RAGPipeline
-from test_queries import run_tests
+from evaluation import run_evaluation
 from vector_store import VectorStore
 
 
@@ -83,8 +83,8 @@ def chat():
         console.print()
 
 
-def test(report_path: str | None = None):
-    run_tests(report_path=report_path)
+def evaluate(report_path: str | None = None):
+    run_evaluation(report_path=report_path)
 
 
 def main():
@@ -100,8 +100,8 @@ def main():
 
     subparser.add_parser("chat", help="Start an interactive chat session")
 
-    test_parser = subparser.add_parser("test", help="Run evaluation queries with LLM-as-judge")
-    test_parser.add_argument("--report", metavar="FILE", help="Save markdown report to FILE")
+    evaluate_parser = subparser.add_parser("evaluate", help="Run evaluation queries with LLM-as-judge")
+    evaluate_parser.add_argument("--report", metavar="FILE", help="Save markdown report to FILE")
 
     args = parser.parse_args()
 
@@ -120,8 +120,8 @@ def main():
         chat()
     elif args.command == "search":
         search(args.query)
-    elif args.command == "test":
-        test(report_path=getattr(args, "report", None))
+    elif args.command == "evaluate":
+        evaluate(report_path=getattr(args, "report", None))
 
 
 if __name__ == "__main__":
