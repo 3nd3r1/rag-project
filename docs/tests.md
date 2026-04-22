@@ -5,7 +5,7 @@
 - Missing sub-category texts
 - Comparative queries performed poorly
 
-Commit: c8903ea04f53b93f885123cf5f9104801cad145
+Commit: https://github.com/3nd3r1/ledger/commit/c8903ea04f53b93f885123cf5f9104801cad145
 
 Result: [test-reports/report1.md](./test-reports/report1.md)
 
@@ -14,6 +14,6 @@ Result: [test-reports/report1.md](./test-reports/report1.md)
 - Fixed the judge prompt
 - A lot of missing data in the context
 
-Commit: a78d830451d910cdb4e100513a47065649704ccd
+Commit: https://github.com/3nd3r1/ledger/commit/86aa0fb6ea532154bd1576cec096c170f0a62984
 
 Result: [test-reports/report2.md](./test-reports/report2.md)
