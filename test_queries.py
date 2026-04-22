@@ -1,4 +1,5 @@
 import re
+from datetime import date
 
 from rich import box
 from rich.console import Console
@@ -96,7 +97,56 @@ def judge(question: str, truth: str, rag_answer: str) -> tuple[int, str]:
     return score, explanation
 
 
-def run_tests():
+def write_report(results: list[dict], path: str):
+    lines = [
+        "# Report",
+        f"**Date:** {date.today()}  ",
+        "",
+    ]
+
+    scored = [r["score"] for r in results if r["score"] > 0]
+    if scored:
+        avg = sum(scored) / len(scored)
+        lines += [
+            "## Summary",
+            f"- **Questions:** {len(results)}",
+            f"- **Judged:** {len(scored)}",
+            f"- **Average score:** {avg:.2f} / 5.00",
+            f"- **Pass:** {sum(1 for s in scored if s >= 4)}",
+            f"- **Fail:** {sum(1 for s in scored if s < 4)}",
+            "",
+        ]
+
+    lines += [
+        "## Results",
+        "",
+        "| # | Question | Score | Explanation |",
+        "|---|----------|-------|-------------|",
+    ]
+    for i, r in enumerate(results, 1):
+        score = f"{r['score']}/5" if r["score"] else "N/A"
+        question = r["tc"]["question"].replace("|", "\\|")
+        explanation = r["explanation"].replace("|", "\\|")
+        lines.append(f"| {i} | {question} | {score} | {explanation} |")
+
+    lines += ["", "## Details", ""]
+    for i, r in enumerate(results, 1):
+        lines += [
+            f"### {i}. {r['tc']['question']}",
+            "",
+            f"**Truth:** {r['tc']['truth']}",
+            "",
+            f"**RAG Answer:** {r['rag_answer']}",
+            "",
+            f"**Score:** {r['score']}/5 — {r['explanation']}",
+            "",
+        ]
+
+    with open(path, "w") as f:
+        f.write("\n".join(lines))
+
+
+def run_tests(report_path: str | None = None):
     store = VectorStore()
     rag = RAGPipeline(store)
 
@@ -153,3 +203,7 @@ def run_tests():
         console.print(
             f"\nAverage score: [blue]{avg:.2f} / 5.00[/blue]  ({len(scored)}/{len(results)} judged)\n"
         )
+
+    if report_path:
+        write_report(results, report_path)
+        console.print(f"[green]✓[/green] Report saved to [bold]{report_path}[/bold]\n")

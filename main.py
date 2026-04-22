@@ -83,8 +83,8 @@ def chat():
         console.print()
 
 
-def test():
-    run_tests()
+def test(report_path: str | None = None):
+    run_tests(report_path=report_path)
 
 
 def main():
@@ -100,7 +100,8 @@ def main():
 
     subparser.add_parser("chat", help="Start an interactive chat session")
 
-    subparser.add_parser("test", help="Run evaluation queries with LLM-as-judge")
+    test_parser = subparser.add_parser("test", help="Run evaluation queries with LLM-as-judge")
+    test_parser.add_argument("--report", metavar="FILE", help="Save markdown report to FILE")
 
     args = parser.parse_args()
 
@@ -120,7 +121,7 @@ def main():
     elif args.command == "search":
         search(args.query)
     elif args.command == "test":
-        test()
+        test(report_path=getattr(args, "report", None))
 
 
 if __name__ == "__main__":
