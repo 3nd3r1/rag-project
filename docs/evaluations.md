@@ -71,7 +71,16 @@ Result: [evaluation-reports/report4.md](./evaluation-reports/report4.md)
 
 ### Changes
 
+- Added cross-year monthly aggregate texts
+- Improved month text clarity
+- Increased top_k to 20 so region and state results fit in context
+
 ### Issues
 
-Commit:
+- Category and sub-category queries failed
+- Trend queries still fail
+- Discount query still retrieves product-level chunks instead of sub-category
+- State and city retrieval improved but incomplete
+
+Commit: https://github.com/3nd3r1/ledger/commit/1e533a00ef8dfd1227a2fc89f4fa09aa4f3b569f
 Result: [evaluation-reports/report5.md](./evaluation-reports/report5.md)
