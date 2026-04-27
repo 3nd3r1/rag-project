@@ -57,15 +57,17 @@ RANK_KEYWORDS = [
     "compare",
 ]
 
-SORT_KEYWORDS: dict[str, str] = {"sales": "total_sales", "revenue": "total_sales"}
+SORT_KEYWORDS: list[tuple[list[str], str]] = [
+    (["sales", "revenue", "sales?", "revenue?"], "total_sales"),
+]
 
 
 def extract_sort_key(query: str) -> str | None:
     q = query.lower()
     if not any(keyword in q for keyword in RANK_KEYWORDS):
         return None
-    for keyword, field in SORT_KEYWORDS.items():
-        if keyword in q:
+    for keywords, field in SORT_KEYWORDS:
+        if any(keyword in q for keyword in keywords):
             return field
     return None
 
