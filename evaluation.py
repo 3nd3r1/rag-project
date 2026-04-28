@@ -18,66 +18,118 @@ TEST_CASES = [
     {
         "question": "What is the sales trend over the 4-year period?",
         "truth": "Sales grew overall from $484,247.50 (2014) to $733,215.26 (2017). 2015 dipped slightly to $470,532.51 before rising to $609,205.60 in 2016 and peaking in 2017.",
+        "criteria": [
+            "Mentions all four years (2014-2017) with sales figures",
+            "Identifies the overall upward trend",
+            "Notes the 2015 dip",
+        ],
     },
     {
         "question": "Which months show the highest sales? Is there seasonality?",
         "truth": "Sales peak in November ($352,461.07) and December ($325,293.50), with a secondary peak in September ($307,649.95). This suggests a strong end-of-year seasonality pattern.",
+        "criteria": [
+            "Identifies November and December as peak months",
+            "Mentions a seasonality pattern",
+            "Provides actual dollar amounts",
+        ],
     },
     {
         "question": "How has profit margin changed over time?",
         "truth": "Profit margin improved from 10.23% in 2014 to 13.10% in 2015, peaked at 13.43% in 2016, then declined slightly to 12.74% in 2017.",
+        "criteria": [
+            "Provides profit margin percentages for each year",
+            "Identifies the peak year (2016)",
+            "Notes the slight decline in 2017",
+        ],
     },
     {
         "question": "Which product category generates the most revenue?",
         "truth": "Technology generates the most revenue at $836,154.03, followed by Furniture $741,999.80 and Office Supplies $719,047.03",
+        "criteria": [
+            "Identifies Technology as the top category",
+            "Mentions all three categories with dollar amounts",
+        ],
     },
     {
         "question": "What sub-categories have the highest profit margins?",
         "truth": "Top sub-categories by profit margin: Labels 44.42%, Paper 43.39%, Envelopes 42.27%, Copiers 37.20%, Fasteners 31.40%.",
+        "criteria": [
+            "Lists at least 3 sub-categories with profit margin percentages",
+            "Identifies Labels or Paper as top profit margin sub-categories",
+        ],
     },
     {
         "question": "Which products are frequently sold at a discount?",
         "truth": "The most discounted sub-categories by number of discounted transactions: Binders (1,186), Phones (578), Paper (513), Chairs (484), Furnishings (386).",
+        "criteria": [
+            "Identifies Binders as the most discounted sub-category",
+            "Lists at least 3 sub-categories with discount counts",
+        ],
     },
     {
         "question": "Which region has the best sales performance?",
         "truth": "The top sales regions are: 1. West $725,457.82, 2. East $678,781.24, 3. Central $501,239.89",
+        "criteria": [
+            "Identifies West as the top region",
+            "Mentions at least 3 regions with sales figures",
+        ],
     },
     {
         "question": "Compare sales performance across different states.",
         "truth": "Top 5 states by total sales: California $457,687.63, New York $310,876.27, Texas $170,188.05, Washington $138,641.27, Pennsylvania $116,511.91.",
+        "criteria": [
+            "Identifies California as the top state with ~$457,688 in sales",
+            "Compares at least 3 states with dollar amounts",
+            "Mentions a low-performing or negative-profit state",
+        ],
     },
     {
         "question": "Which cities are the top performers in terms of sales?",
         "truth": "Top 5 cities by sales: New York City $256,368.16, Los Angeles $175,851.34, Seattle $119,540.74, San Francisco $112,669.09, Philadelphia $109,077.01.",
+        "criteria": [
+            "Identifies New York City as the top city",
+            "Lists at least 3 cities with sales figures",
+        ],
     },
     {
         "question": "Compare Technology vs. Furniture sales trends over the years.",
         "truth": "Technology sales: 2014 $175,278.23, 2015 $162,780.81, 2016 $226,364.18, 2017 $271,730.81. Furniture sales: 2014 $157,192.85, 2015 $170,518.24, 2016 $198,901.44, 2017 $215,387.27. Technology leads in all years except 2015.",
+        "criteria": [
+            "Provides yearly sales for both Technology and Furniture",
+            "Notes that Technology leads overall",
+            "Mentions that Furniture exceeded Technology in 2015",
+        ],
     },
     {
         "question": "How does the West region compare to the East in terms of profit?",
         "truth": "West region profit is $108,418.45 versus East region profit of $91,522.78. West outperforms East by $16,895.67.",
+        "criteria": [
+            "States West profit (~$108,418) and East profit (~$91,523)",
+            "Identifies West as outperforming East",
+        ],
     },
 ]
 
 
 JUDGE_PROMPT = """\
 You are evaluating a RAG system that answers questions about a sales dataset.
-Judge only facts ignore formatting and phrasing differences.
-
-Scoring:
-5 - All facts from the truth are present and correct.
-4 - Most facts are correct, only minor omissions or small numerical differences.
-3 - Some key facts are correct but important information is missing or wrong.
-2 - Mostly incorrect or missing, with only minor correct elements.
-1 - Completely wrong or not relevant answer.
+Judge only facts, ignore formatting and phrasing differences.
 
 Question: {question}
 
-Truth: {truth}
+Reference: {truth}
+
+Criteria for a good answer:
+{criteria_list}
 
 RAG Answer: {rag_answer}
+
+Score the answer considering both factual accuracy against the reference and the criteria:
+5 - All facts correct and all criteria met.
+4 - Most facts correct, only minor omissions.
+3 - Some key facts correct but important information missing or wrong.
+2 - Mostly incorrect or missing, with only minor correct elements.
+1 - Completely wrong or not relevant answer.
 
 Reply with:
 SCORE: <integer 1-5>
@@ -85,12 +137,11 @@ EXPLANATION: <one sentence explaining the score>
 """
 
 
-def judge(question: str, truth: str, rag_answer: str) -> tuple[int, str]:
+def judge(question: str, truth: str, criteria: list[str], rag_answer: str) -> tuple[int, str]:
     llm = create_llm()
+    criteria_list = "\n".join(f"- {c}" for c in criteria) if criteria else "- N/A"
     prompt = JUDGE_PROMPT.format(
-        question=question,
-        truth=truth,
-        rag_answer=rag_answer,
+        question=question, truth=truth, rag_answer=rag_answer, criteria_list=criteria_list,
     )
     text = invoke_llm(llm, prompt)
 
@@ -144,6 +195,12 @@ def write_report(results: list[dict], path: str):
             "",
             f"**Truth:** {r['tc']['truth']}",
             "",
+            f"**Criteria:**",
+        ]
+        for c in r["tc"].get("criteria", []):
+            lines.append(f"- {c}")
+        lines += [
+            "",
             f"**RAG Answer:** {r['rag_answer']}",
             "",
             f"**Score:** {r['score']}/5 — {r['explanation']}",
@@ -175,6 +232,7 @@ def run_evaluation(report_path: str | None = None):
             score, explanation = judge(
                 question=tc["question"],
                 truth=tc["truth"],
+                criteria=tc.get("criteria", []),
                 rag_answer=str(rag_answer),
             )
             results.append(
