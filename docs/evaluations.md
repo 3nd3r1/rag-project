@@ -116,3 +116,17 @@ Result: [evaluation-reports/report6.md](./evaluation-reports/report6.md)
 
 Commit: https://github.com/3nd3r1/ledger/commit/c660d3f
 Result: [evaluation-reports/report7.md](./evaluation-reports/report7.md)
+
+## Version 8
+
+### Changes
+
+- Added subcategory ranking texts
+- Switched from llama-3.1-8b-instant to openai/gpt-oss-20b
+
+### Issues
+
+- Discount query scored 3/5. The answer was still correct but the criteria was unclear.
+
+Commit: https://github.com/3nd3r1/ledger/commit/b4c8733
+Result: [evaluation-reports/report8.md](./evaluation-reports/report8.md)
