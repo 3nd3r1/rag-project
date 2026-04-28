@@ -133,6 +133,8 @@ RAG_TEMPLATE = PromptTemplate.from_template(
 7. Vector search cannot rank by numeric values
    - Cosine similarity ranks by text relevance, not by metrics like sales or profit. Queries like "top cities by sales" retrieve semantically similar chunks, not the highest-value ones. ChromaDB does not support ordering by metadata fields.
      The workaround is pre-computed ranking summaries at index time (Top cities by sales) so the answer exists as a single retrievable chunk.
+8. Rate limiting in groq
+   - Use google ai studio
 
 ## AI Usage
 
