@@ -58,7 +58,7 @@ TEST_CASES = [
     },
     {
         "question": "Which products are frequently sold at a discount?",
-        "truth": "The most discounted sub-categories by number of discounted transactions: Binders (1,186), Phones (578), Paper (513), Chairs (484), Furnishings (386).",
+        "truth": "The most discounted sub-categories by number of discounted transactions: Binders (1,186), Phones (578), Paper (513), Chairs (484), Furnishings (386). By discount rate: Binders (90%), Chairs (84%), Tables (80%), Machines (77%), Bookcases (75%).",
         "criteria": [
             "Identifies the most discounted sub-category",
             "Lists at least 3 sub-categories with discount counts",
