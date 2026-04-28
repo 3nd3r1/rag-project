@@ -406,6 +406,8 @@ def chunk_texts(
             for word in text.split():
                 if current_length + len(word) + 1 > chunk_size:
                     result.append((" ".join(current), metadata))
+                    current = []
+                    current_length = 0
                 current.append(word)
                 current_length += len(word) + 1
             if current:
