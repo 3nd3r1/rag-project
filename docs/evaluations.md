@@ -99,3 +99,20 @@ Result: [evaluation-reports/report5.md](./evaluation-reports/report5.md)
 
 Commit: https://github.com/3nd3r1/ledger/commit/d8f549cfb0812fb3771c1e9a170457774011b8af
 Result: [evaluation-reports/report6.md](./evaluation-reports/report6.md)
+
+## Version 7
+
+### Changes
+
+- Added criteria-based evaluation alongside ground truth scoring
+- Fixed chunk_texts bug where chunks were not split correctly
+- Added ranking texts
+
+### Issues
+
+- Sub-category profit margin query scored 2/5. Create ranking text for profit margins·
+- Seasonality query scored 3/5. Correct data but LLM says "not enough information to confirm seasonality".
+- West vs East profit comparison scored 4/5. Small error ($16,095.67 instead of $16,895.67)
+
+Commit: https://github.com/3nd3r1/ledger/commit/c660d3f
+Result: [evaluation-reports/report7.md](./evaluation-reports/report7.md)
