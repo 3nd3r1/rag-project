@@ -17,7 +17,7 @@ TYPE_KEYWORDS: list[tuple[list[str], list[str]]] = [
     (["season", "which month", "monthly"], ["month_aggregate_summary"]),
     (["discount"], ["subcategory_summary"]),
     (["category"], ["category_summary"]),
-    (["sub-category", "subcategory"], ["subcategory_summary"]),
+    (["sub-category", "subcategory"], ["subcategory_summary", "subcategory_ranking"]),
     (["state"], ["state_summary", "states_ranking"]),
     (["city", "cities"], ["city_summary", "cities_ranking"]),
     (["region"], ["region_summary"]),
