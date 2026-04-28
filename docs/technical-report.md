@@ -9,10 +9,12 @@
 ### Modules
 
 - `main.py` (entrypoint)
-- `data_preparation.py` (loading, text conversion, chunking),
-- `vector_store.py` (ChromaDB wrapper),
-- `rag_pipeline.py` (retrieval and LLM generation via LangChain).
-- `evaluation.py` (Evaluation of sample queries).
+- `preparation.py` (loading, text conversion, chunking)
+- `vector_store.py` (ChromaDB wrapper)
+- `rag_pipeline.py` (retrieval and LLM generation via LangChain)
+- `evaluation.py` (evaluation of sample queries)
+- `llm_provider.py` (LLM provider abstraction)
+- `config.py` (configuration)
 
 ## Data Preprocessing and Chunking
 
@@ -23,20 +25,25 @@
 Each order is converted to:
 
 ```text
-Order {Order ID} on {Order Date}: Customer {Customer Name} ({Customer Segment}) from {City}, {State} ({Region}). Ordered '{Product Name}' in category {Category}/{Sub-Category}. Sales: ${Sales}, Quantity: {Quantity}, Discount: {Discount}%, Profit: ${Profit}.
+Order {Order ID} on {Order Date}: Customer {Customer Name} from {City}, {State}, {Region} ordered {Quantity} '{Product Name}' with ship mode {Ship Mode}, generating ${Sales} in sales and ${Profit} in profit.
 ```
 
 Example:
 
 ```text
-Order CA-2016-152156 on 2016-11-08: Customer Claire Gute (Consumer segment) from Henderson, Kentucky (South region). Ordered 'Bush Somerset Collection Bookcase' in category Furniture/Bookcases. Sales: $261.96, Quantity: 2, Discount: 0%, Profit: $41.91.
+Order CA-2016-152156 on 2016-11-08: Customer Claire Gute from Henderson, Kentucky, South ordered 2 'Bush Somerset Collection Bookcase' with ship mode Second Class, generating $261.96 in sales and $41.91 in profit.
 ```
 
-In addition summaries are generated for monthly sales totals, category/sub-category performance statistics and regional breakdowns by state.
+In addition, aggregated summaries are generated for:
+- Monthly sales totals and cross-year monthly aggregates
+- Yearly summaries with profit margin and year × category breakdowns
+- Regional, state, and city summaries
+- Category, sub-category, and product summaries
+- Ranking texts for states, cities, and sub-categories (by sales, profit, and profit margin)
 
 ### Chunking
 
-- Character-based approach with default size of 1,000 characters.
+- Character-based approach with default size of 500 characters.
 - Transaction descriptions are 200-300 characters so they pass unchunked.
 
 ## Embedding Model and Vector Database
@@ -51,7 +58,7 @@ all-MiniLM-L6-v2 from sentence-transformers was selected as the embedding model.
 - ChromaDB has a built-in adapter that handles embedding automatically
 - The small dimensions and a bit lower quality wasn't an issue with the sample queries
 
-TODO: Something about metadata
+Each chunk stores metadata (type, region, category, year, etc.) used for keyword-based routing at query time.
 
 ### ChromaDB
 
@@ -65,13 +72,14 @@ ChromaDB was chosen for its simplicity.
 
 ### LLM
 
-- We tried Mistral 7B and Phi3 from Ollama but they took a very long time to respond on my minimal hardware making testing impossible.
-- Switched to llama-3.1-8b-instant from Groq which is much faster due to being external.
-- Still kept a flag to switch model providers very easily for users who want to run locally.
+- Tried Mistral 7B and Phi3 from Ollama but they were too slow on my hardware for iterative testing.
+- Switched to Groq (cloud). Started with llama-3.1-8b-instant (7K TPM limit), then moved to openai/gpt-oss-20b (8K TPM).
+- Also added Google Gemini as a provider option (generous free tier).
+- Provider is configurable via environment variables — users can run locally with Ollama or use any cloud provider.
 
 ### Prompt Engineering
 
-- System prompt instructs the LLM to act as a data anlyst, use only the provided context, acknowledge when information is insufficient and cite specific numbers:
+- System prompt instructs the LLM to act as a data analyst, use only the provided context, acknowledge when information is insufficient and cite specific numbers:
 
 ```text
 You are a data analyst assistant.
@@ -148,8 +156,6 @@ Tools used: Claude.
   - Prompt: "How do I disable the verbose logging from transformers and LangChain in my CLI app"
 - Chunking bug: Asked Claude to investigate why ranking texts were not appearing in search results.
   - Prompt: "Why are ranking texts not visible when I search"
-
-## Running Results
 
 ### Problem Analysis
 
