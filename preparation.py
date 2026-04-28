@@ -229,6 +229,29 @@ def create_state_ranking_texts(df: pd.DataFrame, n: int = 10) -> list[tuple[str,
     ]
 
 
+def create_subcategory_ranking_texts(df: pd.DataFrame, n: int = 10) -> list[tuple[str, dict]]:
+    rows = (
+        df.groupby("Sub-Category")
+        .agg(total_sales=("Sales", "sum"), total_profit=("Profit", "sum"))
+        .reset_index()
+    )
+    rows["profit_margin"] = rows["total_profit"] / rows["total_sales"] * 100
+
+    results = []
+    for metric, col, fmt in [
+        ("sales", "total_sales", "${val:.2f}"),
+        ("profit", "total_profit", "${val:.2f}"),
+        ("profit margin", "profit_margin", "{val:.2f}%"),
+    ]:
+        top = rows.sort_values(col, ascending=False).head(n)
+        lines = ", ".join(
+            f"{i}. {r['Sub-Category']} {fmt.format(val=r[col])}"
+            for i, (_, r) in enumerate(top.iterrows(), 1)
+        )
+        results.append((f"Top {n} sub-categories by {metric}: {lines}.", {"type": "subcategory_ranking"}))
+    return results
+
+
 def create_category_text(row: pd.Series) -> tuple[str, dict]:
     text = (
         f"Category summary for {row['Category']}: "
@@ -387,6 +410,7 @@ def create_texts(df: pd.DataFrame) -> list[tuple[str, dict]]:
     texts += create_city_texts(df)
     texts += create_category_texts(df)
     texts += create_subcategory_texts(df)
+    texts += create_subcategory_ranking_texts(df)
     texts += create_product_texts(df)
     texts += create_city_ranking_texts(df)
     texts += create_state_ranking_texts(df)
