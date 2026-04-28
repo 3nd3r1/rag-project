@@ -170,8 +170,17 @@ def create_city_texts(df: pd.DataFrame) -> list[tuple[str, dict]]:
     return [create_city_text(row) for _, row in city_rows.iterrows()]
 
 
-def _format_ranking(names: list[str], values: list[float], label: str, metric: str, n: int, chunk_type: str) -> tuple[str, dict]:
-    lines = ", ".join(f"{i}. {name} ${val:.2f}" for i, (name, val) in enumerate(zip(names, values), 1))
+def _format_ranking(
+    names: list[str],
+    values: list[float],
+    label: str,
+    metric: str,
+    n: int,
+    chunk_type: str,
+) -> tuple[str, dict]:
+    lines = ", ".join(
+        f"{i}. {name} ${val:.2f}" for i, (name, val) in enumerate(zip(names, values), 1)
+    )
     text = f"Top {n} {label} by total {metric}: {lines}."
     return text, {"type": chunk_type}
 
@@ -367,28 +376,28 @@ def create_year_category_texts(df: pd.DataFrame) -> list[tuple[str, dict]]:
 
 
 def create_texts(df: pd.DataFrame) -> list[tuple[str, dict]]:
-    chunks: list[tuple[str, dict]] = []
-    chunks += create_row_texts(df)
-    chunks += create_month_texts(df)
-    chunks += create_month_aggregate_texts(df)
-    chunks += create_year_texts(df)
-    chunks += create_year_category_texts(df)
-    chunks += create_region_texts(df)
-    chunks += create_state_texts(df)
-    chunks += create_city_texts(df)
-    chunks += create_category_texts(df)
-    chunks += create_subcategory_texts(df)
-    chunks += create_product_texts(df)
-    chunks += create_city_ranking_texts(df)
-    chunks += create_state_ranking_texts(df)
-    return chunks
+    texts: list[tuple[str, dict]] = []
+    texts += create_row_texts(df)
+    texts += create_month_texts(df)
+    texts += create_month_aggregate_texts(df)
+    texts += create_year_texts(df)
+    texts += create_year_category_texts(df)
+    texts += create_region_texts(df)
+    texts += create_state_texts(df)
+    texts += create_city_texts(df)
+    texts += create_category_texts(df)
+    texts += create_subcategory_texts(df)
+    texts += create_product_texts(df)
+    texts += create_city_ranking_texts(df)
+    texts += create_state_ranking_texts(df)
+    return texts
 
 
 def chunk_texts(
-    chunks: list[tuple[str, dict]], chunk_size: int = 500
+    texts: list[tuple[str, dict]], chunk_size: int = 500
 ) -> list[tuple[str, dict]]:
     result: list[tuple[str, dict]] = []
-    for text, metadata in chunks:
+    for text, metadata in texts:
         if len(text) <= chunk_size:
             result.append((text, metadata))
         else:
