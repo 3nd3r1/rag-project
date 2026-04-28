@@ -1,86 +1,58 @@
-# Technical report
+# Technical Report
 
 ## System Architecture
 
-- Kaggle Superstore Sales Dataset (9,994 transactions, 2014–2017).
-- RAG: data is converted into natural language text chunks, embedded into a vector database, retrieved at query to provide context for LLM that generates the final answer.
-- CSV → Pandas → text representations → chunking → ChromaDB → query → search → retrieved context → LLM → response
+The system is a RAG chatbot that answers questions about the Superstore dataset (9,994 transactions, 2014–2017). The pipeline works like this: the CSV is loaded with Pandas, converted into natural language text chunks, embedded into ChromaDB and then at query time the most relevant chunks are retrieved and passed to an LLM which generates the answer.
 
-### Modules
+The codebase is split into a few modules:
 
-- `main.py` (entrypoint)
-- `preparation.py` (loading, text conversion, chunking)
-- `vector_store.py` (ChromaDB wrapper)
-- `rag_pipeline.py` (retrieval and LLM generation via LangChain)
-- `evaluation.py` (evaluation of sample queries)
-- `llm_provider.py` (LLM provider abstraction)
-- `config.py` (configuration)
+- `main.py` — CLI entrypoint (prepare, search, chat, evaluate commands)
+- `preparation.py` — data loading, text generation, chunking
+- `vector_store.py` — ChromaDB wrapper
+- `rag_pipeline.py` — retrieval + LLM generation via LangChain
+- `evaluation.py` — LLM-as-judge evaluation suite
+- `llm_provider.py` — provider abstraction (Ollama, Groq, Google)
+- `config.py` — environment-based configuration
 
 ## Data Preprocessing and Chunking
 
-- Loaded with Pandas, dates parser
+The dataset is loaded with Pandas and dates are parsed. Each row gets converted into a natural language sentence:
 
-### Text representation
-
-Each order is converted to:
-
-```text
-Order {Order ID} on {Order Date}: Customer {Customer Name} from {City}, {State}, {Region} ordered {Quantity} '{Product Name}' with ship mode {Ship Mode}, generating ${Sales} in sales and ${Profit} in profit.
+```
+Order CA-2016-152156 on 2016-11-08: Customer Claire Gute from Henderson,
+Kentucky, South ordered 2 'Bush Somerset Collection Bookcase' with ship mode
+Second Class, generating $261.96 in sales and $41.91 in profit.
 ```
 
-Example:
+On top of the individual rows, I generate aggregated summary texts: monthly totals, cross-year monthly aggregates, yearly summaries with profit margins, year × category breakdowns, region/state/city summaries, category and sub-category summaries, product summaries, and ranking texts for states, cities, and sub-categories by sales, profit, and profit margin.
 
-```text
-Order CA-2016-152156 on 2016-11-08: Customer Claire Gute from Henderson, Kentucky, South ordered 2 'Bush Somerset Collection Bookcase' with ship mode Second Class, generating $261.96 in sales and $41.91 in profit.
-```
+The ranking texts were a key addition, without them the system couldn't answer questions like "top states by sales" because cosine similarity doesn't understand numeric ordering.
+Pre-computing the rankings as retrievable text chunks solved this.
 
-In addition, aggregated summaries are generated for:
-
-- Monthly sales totals and cross-year monthly aggregates
-- Yearly summaries with profit margin and year × category breakdowns
-- Regional, state, and city summaries
-- Category, sub-category, and product summaries
-- Ranking texts for states, cities, and sub-categories (by sales, profit, and profit margin)
-
-### Chunking
-
-- Character-based approach with default size of 500 characters.
-- Transaction descriptions are 200-300 characters so they pass unchunked.
+Chunking is character-based with a 500-character limit.
+Most texts are under that so they pass through unchunked.
+Longer texts (like ranking lists) get split at word boundaries.
 
 ## Embedding Model and Vector Database
 
-### Embedding (all-MiniLM-L6-v2)
+I went with `all-MiniLM-L6-v2` for embeddings.
+It's lightweight (~80 MB), runs on CPU, produces 384-dimensional vectors and ChromaDB has a built-in adapter for it so there's no extra setup.
+The quality is good enough for the kind of queries we're doing here.
 
-all-MiniLM-L6-v2 from sentence-transformers was selected as the embedding model.
-
-- 384-dimensional vectors
-- Lightweight (~80 MB)
-- CPU inference
-- ChromaDB has a built-in adapter that handles embedding automatically
-- The small dimensions and a bit lower quality wasn't an issue with the sample queries
-
-Each chunk stores metadata (type, region, category, year, etc.) used for keyword-based routing at query time.
-
-### ChromaDB
-
-ChromaDB was chosen for its simplicity.
-
-- In-process
-- No external servers
-- Persisted as local files in `chroma_db/`
+ChromaDB was chosen because it's simple: runs in-process, no external servers, just persists to local files.
+Each chunk is stored with metadata (type, region, category, year, etc.) which is used later for keyword-based routing.
 
 ## LLM Selection and Prompt Engineering
 
-### LLM
+I first tried running Mistral 7B and Phi3 locally through Ollama but they were painfully slow on my hardware, making iterative testing impossible.
+I switched to Groq's cloud API.
+Started with `llama-3.1-8b-instant` but hit the 7K tokens/minute rate limit during evaluation runs.
+Moved to `openai/gpt-oss-20b` which had a slightly higher 8K TPM limit.
+The provider is configurable via `.env` so anyone can switch between local and cloud.
 
-- Tried Mistral 7B and Phi3 from Ollama but they were too slow on my hardware for iterative testing.
-- Switched to Groq (cloud). Started with llama-3.1-8b-instant (7K TPM limit), then moved to openai/gpt-oss-20b (8K TPM).
-- Also added Google Gemini as a provider option (generous free tier).
-- Provider is configurable via environment variables — users can run locally with Ollama or use any cloud provider.
-
-### Prompt Engineering
-
-- System prompt instructs the LLM to act as a data analyst, use only the provided context, acknowledge when information is insufficient and cite specific numbers:
+The system prompt tells the LLM to act as a data analyst, only use the provided context and always cite specific numbers.
+I also added keyword-based routing before the vector search, if the query mentions "state", it filters to state summaries and rankings, if it mentions "category", it filters to category chunks, etc.
+This made a huge difference in retrieval quality.
 
 ```text
 You are a data analyst assistant.
@@ -90,91 +62,69 @@ If the context doesn't contain enough information, say that there is not enough 
 Always cite specific data.
 ```
 
-- The chunks are numbered and inserted into the prompt as context followed by the query:
+The retrieved chunks are inserted as context followed by the query:
 
-```python
-RAG_TEMPLATE = PromptTemplate.from_template(
-    SYSTEM_PROMPT + "\n\n"
-    "Context:\n{context}\n\n"
-    "Question: {question}\n\n"
-    "Answer based on the context above:"
-)
+```
+Context:
+{context}
+
+Question: {question}
+
+Answer based on the context above:
 ```
 
 ## Sample Queries and Responses
 
-11 queries evaluated across 8 iterations. Final score: 4.82 / 5.00. Full reports: [evaluations.md](./evaluations.md)
+The system was evaluated with 11 queries across 4 categories using an LLM-as-judge approach.
+Each answer is scored 1–5 against ground truth references and criteria.
+The system went through 8 iterative versions, improving from 3.73 (v6) to 4.82 (v8).
+10 out of 11 queries scored 5/5. Full evaluation history: [evaluations.md](./evaluations.md)
 
-### Trend Analysis
+| Category    | Query                                | Score |
+| ----------- | ------------------------------------ | ----- |
+| Trend       | Sales trend over 4 years             | 5/5   |
+| Trend       | Highest sales months / seasonality   | 5/5   |
+| Trend       | Profit margin over time              | 5/5   |
+| Category    | Top revenue category                 | 5/5   |
+| Category    | Highest profit margin sub-categories | 5/5   |
+| Category    | Products frequently sold at discount | 3/5   |
+| Regional    | Best sales region                    | 5/5   |
+| Regional    | State sales comparison               | 5/5   |
+| Regional    | Top cities by sales                  | 5/5   |
+| Comparative | Technology vs Furniture trends       | 5/5   |
+| Comparative | West vs East profit                  | 5/5   |
 
-**Q: What is the sales trend over the 4-year period?** (5/5)
-
-> Sales fell slightly from $484K (2014) to $471K (2015), then rose to $609K (2016) and $733K (2017). Overall upward trend with a brief 2015 dip.
-
-**Q: Which months show the highest sales? Is there seasonality?** (5/5)
-
-> November ($352K), December ($325K), September ($308K). Clear Q4 seasonality pattern.
-
-**Q: How has profit margin changed over time?** (5/5)
-
-> Rose from 10.23% (2014) to 13.43% (2016), declined slightly to 12.74% (2017).
-
-### Category Analysis
-
-**Q: Which product category generates the most revenue?** (5/5)
-
-> Technology at $836,154.03.
-
-**Q: What sub-categories have the highest profit margins?** (5/5)
-
-> Labels (44.42%), Paper (43.39%), Envelopes (42.27%), Copiers (37.20%), Fasteners (31.40%).
-
-**Q: Which products are frequently sold at a discount?** (3/5)
-
-> Binders (90% discount rate), Chairs (84%), Tables (80%). LLM ranked by percentage instead of raw count — both valid interpretations.
-
-### Regional Analysis
-
-**Q: Which region has the best sales performance?** (5/5)
-
-> West at $725,457.82.
-
-**Q: Compare sales performance across different states.** (5/5)
-
-> California dominates ($457K), followed by New York ($311K), Texas ($170K). Arizona is the only state with negative profit (-$3,428).
-
-**Q: Which cities are the top performers in terms of sales?** (5/5)
-
-> New York City ($256K), Los Angeles ($176K), Seattle ($120K), San Francisco ($113K), Philadelphia ($109K).
-
-### Comparative Analysis
-
-**Q: Compare Technology vs. Furniture sales trends over the years.** (5/5)
-
-> Both grew 2014–2017. Technology +55% overall but dipped in 2015. Furniture +37% with steady growth. Furniture exceeded Technology only in 2015.
-
-**Q: How does the West region compare to the East in terms of profit?** (5/5)
-
-> West $108,418.45 vs East $91,522.78. West outperforms by $16,895.67.
+The one failing query (discount ranking, 3/5) is because the LLM ranked sub-categories by discount rate (percentage) instead of raw count.
+Both are valid interpretations of "frequently sold at a discount."
 
 ## Challenges and Solutions
 
-1. UTF-8 didn't work
-   - Use latin-1
-2. Type-checker issues
-   - Ignore
-3. Langchain changes
-4. Local models being unusable on my hardware
-   - I uses Groq
-5. Using a jupyter notebook or CLi executable
-   - I went with a CLI executable since I am not fond of Jupyter notebooks.
-6. Too small top_k to get state and city chunks
-   - Increase top_k to 20 so all queries fit
-7. Vector search cannot rank by numeric values
-   - Cosine similarity ranks by text relevance, not by metrics like sales or profit. Queries like "top cities by sales" retrieve semantically similar chunks, not the highest-value ones. ChromaDB does not support ordering by metadata fields.
-     The workaround is pre-computed ranking summaries at index time (Top cities by sales) so the answer exists as a single retrievable chunk.
-8. Rate limiting in Groq
-   - The evaluation suite makes 22 calls (11 RAG + 11 judge) per run. With llama-3.1-8b-instant the free tier limit was 7K tokens per minute, which was not enough. Switched to openai/gpt-oss-20b which had an 8K TPM.
+### CSV Encoding
+
+UTF-8 didn't work with the dataset. Switched to latin-1.
+
+### Local Models Too Slow
+
+Ollama models (Mistral 7B, Phi3) were unusable on my hardware. Switched to Groq cloud.
+
+### Jupyter vs CLI
+
+Went with a CLI since I prefer working in the terminal.
+
+### Small top_k
+
+State and city queries need a lot of context. Increased top_k from 10 to 20.
+
+### Vector Search Can't Rank Numerically
+
+Cosine similarity finds semantically similar text, not the highest sales numbers.
+Solved by pre-computing ranking texts at index time so "Top 10 states by sales: 1. California $457K..." exists as a single retrievable chunk.
+
+### Groq Rate Limits
+
+The evaluation suite makes 22 calls (11 RAG + 11 judge) per run.
+With llama-3.1-8b-instant the free tier limit was 7K tokens per minute, which was not enough.
+Switched to openai/gpt-oss-20b which had an 8K TPM.
 
 ## AI Usage
 
