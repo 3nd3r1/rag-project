@@ -1,3 +1,10 @@
+# Evaluation Reports
+
+The RAG system is iteratively evaluated using an LLM-as-judge approach.
+Each version is tested against 11 queries covering trend analysis, category performance and regional comparisons.
+The judge scores each answer 1–5 against ground truth references and criteria that define what a good answer looks like.
+Each version has the changes made, issues found and links to the full evaluation report.
+
 ## Version 1
 
 ### Changes
