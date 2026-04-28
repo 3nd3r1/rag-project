@@ -170,86 +170,112 @@ def create_city_texts(df: pd.DataFrame) -> list[tuple[str, dict]]:
     return [create_city_text(row) for _, row in city_rows.iterrows()]
 
 
+_RANKING_METRICS = [
+    ("total sales", "total_sales", "${val:.2f}"),
+    ("total profit", "total_profit", "${val:.2f}"),
+    ("profit margin", "profit_margin", "{val:.2f}%"),
+]
+
+
 def _format_ranking(
     names: list[str],
     values: list[float],
     label: str,
     metric: str,
     n: int,
-    chunk_type: str,
-) -> tuple[str, dict]:
+    fmt: str,
+) -> str:
     lines = ", ".join(
-        f"{i}. {name} ${val:.2f}" for i, (name, val) in enumerate(zip(names, values), 1)
+        f"{i}. {name} {fmt.format(val=val)}"
+        for i, (name, val) in enumerate(zip(names, values), 1)
     )
-    text = f"Top {n} {label} by total {metric}: {lines}."
-    return text, {"type": chunk_type}
+    return f"Top {n} {label} by {metric}: {lines}."
 
 
 def create_city_ranking_text(
-    top: pd.DataFrame, metric: str, col: str, n: int
+    top: pd.DataFrame,
+    metric: str,
+    col: str,
+    fmt: str,
+    n: int,
 ) -> tuple[str, dict]:
     names = [f"{r['City']}, {r['State']}" for _, r in top.iterrows()]
-    values = [r[col] for _, r in top.iterrows()]
-    return _format_ranking(names, values, "cities", metric, n, "cities_ranking")
+    values = [float(r[col]) for _, r in top.iterrows()]
+    text = _format_ranking(names, values, "cities", metric, n, fmt)
+    return text, {"type": "cities_ranking"}
 
 
 def create_city_ranking_texts(df: pd.DataFrame, n: int = 10) -> list[tuple[str, dict]]:
-    city_rows = (
+    rows = (
         df.groupby(["City", "State"])
         .agg(total_sales=("Sales", "sum"), total_profit=("Profit", "sum"))
         .reset_index()
     )
+    rows["profit_margin"] = rows["total_profit"] / rows["total_sales"] * 100
     return [
         create_city_ranking_text(
-            city_rows.sort_values(col, ascending=False).head(n), metric, col, n
+            rows.sort_values(col, ascending=False).head(n), metric, col, fmt, n
         )
-        for metric, col in [("sales", "total_sales"), ("profit", "total_profit")]
+        for metric, col, fmt in _RANKING_METRICS
     ]
 
 
 def create_state_ranking_text(
-    top: pd.DataFrame, metric: str, col: str, n: int
+    top: pd.DataFrame,
+    metric: str,
+    col: str,
+    fmt: str,
+    n: int,
 ) -> tuple[str, dict]:
-    names = [r["State"] for _, r in top.iterrows()]
-    values = [r[col] for _, r in top.iterrows()]
-    return _format_ranking(names, values, "states", metric, n, "states_ranking")
+    names = [str(r["State"]) for _, r in top.iterrows()]
+    values = [float(r[col]) for _, r in top.iterrows()]
+    text = _format_ranking(names, values, "states", metric, n, fmt)
+    return text, {"type": "states_ranking"}
 
 
 def create_state_ranking_texts(df: pd.DataFrame, n: int = 10) -> list[tuple[str, dict]]:
-    state_rows = (
+    rows = (
         df.groupby("State")
         .agg(total_sales=("Sales", "sum"), total_profit=("Profit", "sum"))
         .reset_index()
     )
+    rows["profit_margin"] = rows["total_profit"] / rows["total_sales"] * 100
     return [
         create_state_ranking_text(
-            state_rows.sort_values(col, ascending=False).head(n), metric, col, n
+            rows.sort_values(col, ascending=False).head(n), metric, col, fmt, n
         )
-        for metric, col in [("sales", "total_sales"), ("profit", "total_profit")]
+        for metric, col, fmt in _RANKING_METRICS
     ]
 
 
-def create_subcategory_ranking_texts(df: pd.DataFrame, n: int = 10) -> list[tuple[str, dict]]:
+def create_subcategory_ranking_text(
+    top: pd.DataFrame,
+    metric: str,
+    col: str,
+    fmt: str,
+    n: int,
+) -> tuple[str, dict]:
+    names = [str(r["Sub-Category"]) for _, r in top.iterrows()]
+    values = [float(r[col]) for _, r in top.iterrows()]
+    text = _format_ranking(names, values, "sub-categories", metric, n, fmt)
+    return text, {"type": "subcategory_ranking"}
+
+
+def create_subcategory_ranking_texts(
+    df: pd.DataFrame, n: int = 10
+) -> list[tuple[str, dict]]:
     rows = (
         df.groupby("Sub-Category")
         .agg(total_sales=("Sales", "sum"), total_profit=("Profit", "sum"))
         .reset_index()
     )
     rows["profit_margin"] = rows["total_profit"] / rows["total_sales"] * 100
-
-    results = []
-    for metric, col, fmt in [
-        ("sales", "total_sales", "${val:.2f}"),
-        ("profit", "total_profit", "${val:.2f}"),
-        ("profit margin", "profit_margin", "{val:.2f}%"),
-    ]:
-        top = rows.sort_values(col, ascending=False).head(n)
-        lines = ", ".join(
-            f"{i}. {r['Sub-Category']} {fmt.format(val=r[col])}"
-            for i, (_, r) in enumerate(top.iterrows(), 1)
+    return [
+        create_subcategory_ranking_text(
+            rows.sort_values(col, ascending=False).head(n), metric, col, fmt, n
         )
-        results.append((f"Top {n} sub-categories by {metric}: {lines}.", {"type": "subcategory_ranking"}))
-    return results
+        for metric, col, fmt in _RANKING_METRICS
+    ]
 
 
 def create_category_text(row: pd.Series) -> tuple[str, dict]:
