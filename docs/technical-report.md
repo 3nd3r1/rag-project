@@ -35,6 +35,7 @@ Order CA-2016-152156 on 2016-11-08: Customer Claire Gute from Henderson, Kentuck
 ```
 
 In addition, aggregated summaries are generated for:
+
 - Monthly sales totals and cross-year monthly aggregates
 - Yearly summaries with profit margin and year × category breakdowns
 - Regional, state, and city summaries
@@ -102,28 +103,59 @@ RAG_TEMPLATE = PromptTemplate.from_template(
 
 ## Sample Queries and Responses
 
-### Trend Analysis:
+11 queries evaluated across 8 iterations. Final score: 4.82 / 5.00. Full reports: [evaluations.md](./evaluations.md)
 
-- What is the sales trend over the 4-year period?
-- Which months show the highest sales? Is there seasonality?
-- How has profit margin changed over time?
+### Trend Analysis
 
-### Category Analysis:
+**Q: What is the sales trend over the 4-year period?** (5/5)
 
-- Which product category generates the most revenue?
-- What sub-categories have the highest profit margins?
-- Which products are frequently sold at a discount?
+> Sales fell slightly from $484K (2014) to $471K (2015), then rose to $609K (2016) and $733K (2017). Overall upward trend with a brief 2015 dip.
 
-### Regional Analysis:
+**Q: Which months show the highest sales? Is there seasonality?** (5/5)
 
-- Which region has the best sales performance?
-- Compare sales performance across different states.
-- Which cities are the top performers?
+> November ($352K), December ($325K), September ($308K). Clear Q4 seasonality pattern.
 
-### Comparative Analysis:
+**Q: How has profit margin changed over time?** (5/5)
 
-- Compare Technology vs. Furniture sales trends.
-- How does the West region compare to the East in terms of profit?
+> Rose from 10.23% (2014) to 13.43% (2016), declined slightly to 12.74% (2017).
+
+### Category Analysis
+
+**Q: Which product category generates the most revenue?** (5/5)
+
+> Technology at $836,154.03.
+
+**Q: What sub-categories have the highest profit margins?** (5/5)
+
+> Labels (44.42%), Paper (43.39%), Envelopes (42.27%), Copiers (37.20%), Fasteners (31.40%).
+
+**Q: Which products are frequently sold at a discount?** (3/5)
+
+> Binders (90% discount rate), Chairs (84%), Tables (80%). LLM ranked by percentage instead of raw count — both valid interpretations.
+
+### Regional Analysis
+
+**Q: Which region has the best sales performance?** (5/5)
+
+> West at $725,457.82.
+
+**Q: Compare sales performance across different states.** (5/5)
+
+> California dominates ($457K), followed by New York ($311K), Texas ($170K). Arizona is the only state with negative profit (-$3,428).
+
+**Q: Which cities are the top performers in terms of sales?** (5/5)
+
+> New York City ($256K), Los Angeles ($176K), Seattle ($120K), San Francisco ($113K), Philadelphia ($109K).
+
+### Comparative Analysis
+
+**Q: Compare Technology vs. Furniture sales trends over the years.** (5/5)
+
+> Both grew 2014–2017. Technology +55% overall but dipped in 2015. Furniture +37% with steady growth. Furniture exceeded Technology only in 2015.
+
+**Q: How does the West region compare to the East in terms of profit?** (5/5)
+
+> West $108,418.45 vs East $91,522.78. West outperforms by $16,895.67.
 
 ## Challenges and Solutions
 
@@ -173,3 +205,7 @@ The AI-generated test cases ([commit](https://github.com/3nd3r1/ledger/commit/62
 I designed the whole system myself: RAG pipeline, keyword routing, text representations and evaluation approach.
 Claude was used mostly for tedious tasks like generating test cases and debugging library issues.
 When it came to actual decisions like how to structure the eval, what ranking texts to add, or how to fix retrieval problems, those were all mine.
+
+## Appendix
+
+Full RAG answers for all 11 queries: [evaluation-reports/report8.md](./evaluation-reports/report8.md)
