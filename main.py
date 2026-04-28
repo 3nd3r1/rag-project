@@ -7,9 +7,9 @@ from rich.logging import RichHandler
 from rich.markdown import Markdown
 from rich.rule import Rule
 
+from evaluation import run_evaluation
 from preparation import chunk_texts, create_texts, read_data
 from rag_pipeline import RAGPipeline
-from evaluation import run_evaluation
 from vector_store import VectorStore
 
 
@@ -47,7 +47,7 @@ def search(query: str):
     console.print(f"\n[bold]Search results for:[/bold] {query}\n")
     console.print(Rule(style="dim"))
     for result in results:
-        console.print(Markdown(result["text"]))
+        console.print(result["text"])
     console.print(Rule(style="dim"))
 
 
@@ -100,8 +100,12 @@ def main():
 
     subparser.add_parser("chat", help="Start an interactive chat session")
 
-    evaluate_parser = subparser.add_parser("evaluate", help="Run evaluation queries with LLM-as-judge")
-    evaluate_parser.add_argument("--report", metavar="FILE", help="Save markdown report to FILE")
+    evaluate_parser = subparser.add_parser(
+        "evaluate", help="Run evaluation queries with LLM-as-judge"
+    )
+    evaluate_parser.add_argument(
+        "--report", metavar="FILE", help="Save markdown report to FILE"
+    )
 
     args = parser.parse_args()
 
