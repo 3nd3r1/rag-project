@@ -42,6 +42,7 @@ Always cite specific data."""
 RAG_TEMPLATE = PromptTemplate.from_template(
     SYSTEM_PROMPT + "\n\n"
     "Context:\n{context}\n\n"
+    "{history}"
     "Question: {question}\n\n"
     "Answer based on the context above:"
 )
@@ -55,6 +56,7 @@ class RAGPipeline:
     ):
         self._store = vector_store
         self._top_k = top_k
+        self._history: list[tuple[str, str]] = []
 
         self._llm = create_llm()
 
@@ -73,6 +75,14 @@ class RAGPipeline:
             return "No relevant documents found."
 
         context = "\n\n".join(f"{doc['text']}" for doc in docs)
-        prompt = RAG_TEMPLATE.format(context=context, question=question)
+        history = ""
+        if self._history:
+            history = "Conversation history:\n"
+            for q, a in self._history[-5:]:
+                history += f"Q: {q}\nA: {a}\n\n"
+            history += "\n"
+        prompt = RAG_TEMPLATE.format(context=context, question=question, history=history)
         logger.debug("Sending prompt to LLM")
-        return invoke_llm(self._llm, prompt)
+        answer = invoke_llm(self._llm, prompt)
+        self._history.append((question, answer))
+        return answer
