@@ -50,6 +50,11 @@ Most summaries fit withing one chunk, so splitting primarily affects the individ
 The chunker preserves metadata across splits so all chunks remain filterable.
 The 500 chunk size was chosen because its small enough for precise retrieval with the 384-dimensions, but large enough to retain meaningful context for all summary types.
 
+I tested chunk sizes of 500, 1000 and 2000 characters.
+Larger sizes reduced the total chunk count but hurt retrieval precision.
+Broad summaries would get mixed into a single chunk, making it harder for cosine similarity to match specific queries.
+500 gave the best evaluation scores.
+
 ## Embedding Model and Vector Database
 
 I went with `all-MiniLM-L6-v2` for embeddings.
