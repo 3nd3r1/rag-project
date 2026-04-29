@@ -4,3 +4,4 @@ venv/
 chromadb/
 .env
 **.pdf
+!docs/ledger-presentation.pdf
