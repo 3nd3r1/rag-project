@@ -26,7 +26,7 @@ The project uses a Python module layout:
 ## Data Preprocessing and Chunking
 
 The Superstore CSV is tabular data, which requires some conversion since embedding models are designed for natural language.
-The `preparation.py` converts the data into 11 types of natural language summaries.
+The `preparation.py` converts the data into 14 types of natural language summaries.
 
 The module creates summaries for individual rows by converting each of the transactions into a natural language sentence.
 For example:
@@ -95,7 +95,7 @@ Answer based on the context above:
 ## Sample Queries and Responses
 
 The system was evaluated with 11 queries across 4 categories using an LLM-as-judge approach.
-Each answer is scored 1–5 against ground truth references and criteria.
+Each answer is scored 1–5 against ground truth references and per-query criteria.
 The system went through 8 iterative versions, improving from 3.73 (v6) to 4.82 (v8).
 10 out of 11 queries scored 5/5. Full evaluation history: [evaluations.md](./evaluations.md)
 
@@ -140,8 +140,7 @@ With llama-3.1-8b-instant the free tier limit was 7K tokens per minute, which wa
 Switched to openai/gpt-oss-20b which had an 8K TPM.
 
 Type checker noise.
-ChromaDB's functions don't perfectly match the type stubs and serveral pandas operations product false positives.
-Suppressed with `# type: ignore` after verifying runtime.
+ChromaDB's SentenceTransformerEmbeddingFunction and several pandas operations produced a lot of lint errors which had to be suppressed with `# type: ignore`.
 
 ## AI Usage
 
