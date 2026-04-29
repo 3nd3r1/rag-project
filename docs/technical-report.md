@@ -25,7 +25,7 @@ The project uses a Python module layout:
 
 ## Data Preprocessing and Chunking
 
-The Superstore CSV is tabular data, which requires some convertion since embedding models are designed for natural language.
+The Superstore CSV is tabular data, which requires some conversion since embedding models are designed for natural language.
 The `preparation.py` converts the data into 11 types of natural language summaries.
 
 The module creates summaries for individual rows by converting each of the transactions into a natural language sentence.
@@ -46,7 +46,7 @@ Pre-computing the rankings as retrievable text chunks solved this.
 Each text document has a type metadata field (e.g., `region_summary`, `year_category_summary`) plus dimension specific fields (e.g., `region`, `year`) that enables metadata filtering.
 
 Chunking is character-based with a 500-character limit.
-Most summaries fit withing one chunks, so splitting primarily affects the individual row descriptions.
+Most summaries fit withing one chunk, so splitting primarily affects the individual row descriptions.
 The chunker preserves metadata across splits so all chunks remain filterable.
 The 500 chunk size was chosen because its small enough for precise retrieval with the 384-dimensions, but large enough to retain meaningful context for all summary types.
 
@@ -54,24 +54,24 @@ The 500 chunk size was chosen because its small enough for precise retrieval wit
 
 I went with `all-MiniLM-L6-v2` for embeddings.
 It's lightweight (~80 MB), runs on CPU, produces 384-dimensional vectors and ChromaDB has a built-in adapter for it so there's no extra setup.
-The quality is good enough for the kind of queries we're doing here.
+The quality is good enough for the kind of queries the system is doing.
 
 ChromaDB with PersistentClient for on-disk storage was chosen as vector database because it's simple: runs in-process, no external servers, just persists to local files.
 The vector store also has built-in metadata filtering with where.
 
 ## LLM Selection and Prompt Engineering
 
-Ledger provider two LLM providers with the `llm_provider.py` module: Ollama (local) and Groq (cloud).
+Ledger provides two LLM providers with the `llm_provider.py` module: Ollama (local) and Groq (cloud).
 The LLM provider can be configured via the environment variables.
 The reason for the Groq provider was that Mistral 7B and Phi3 through Ollama were painfully slow on my hardware, making iterative testing impossible.
 
-Started with `llama-3.1-8b-instant` but hit the 7K tokens/minute rate limit during evaluation runs.
-Moved to `openai/gpt-oss-20b` which had a slightly higher 8K TPM limit.
-The provider is configurable via `.env` so anyone can switch between local and cloud.
+The prompt follows a four-part structure: system role, context, grounding rules and the query.
+The system prompt instructs the LLM to act as a data analyst, use only the provided context and cite specific numbers.
 
-The system prompt tells the LLM to act as a data analyst, only use the provided context and always cite specific numbers.
-I also added keyword-based routing before the vector search, if the query mentions "state", it filters to state summaries and rankings, if it mentions "category", it filters to category chunks, etc.
-This made a huge difference in retrieval quality.
+A key design decision is keyword-based query routing in `rag_pipeline.py`.
+Before vector search, the system scans the query for keywords (e.g., "state", "region", "category") and maps them to relevant chunk types with a $in metadata filter on ChromaDB.
+This narrows the search space so a question about "top states by sales" retrieves state summaries and rankings rather than unrelated city or product chunks.
+This made a significant difference in retrieval quality.
 
 ```text
 You are a data analyst assistant.
@@ -118,29 +118,30 @@ Both are valid interpretations of "frequently sold at a discount."
 
 ## Challenges and Solutions
 
-Encoding issues. The Superstore CSV triggered an UnicodeDecodeError on load.
+Encoding. The Superstore CSV triggered an UnicodeDecodeError on load.
 This was resolved by using latin-1 in pd.read_csv().
 
-Local models.
-Ollama models (Mistral 7B, Phi3) were unusable on my hardware. Switched to Groq cloud.
+Local model performance.
+Ollama models (Mistral 7B, Phi3) were unusably slow on my hardware. Switched to Groq cloud.
 
-Jupyter vs CLI.
-Went with a CLI since I prefer working in the terminal.
-
-Small top_k.
-State and city queries need a lot of context. Increased top_k from 10 to 20.
-
-Reanking.
-Cosine similarity finds semantically similar text, not the highest sales numbers.
+Ranking quries.
+Cosine similarity finds semantically similar text, not the numerically ordered results.
+A query like "top states by sales" would retrieve state summaries in arbitrary order.
 Solved by pre-computing ranking texts at index time so "Top 10 states by sales: 1. California $457K..." exists as a single retrievable chunk.
+
+Insufficient context.
+State and city queries require alot of chunks to cover all relevant informations.
+I experimented with dynamic top_k based on query type, but the results were inconsistent.
+A fixed top_k of 20 gave the best overall performance.
 
 Rate limits.
 The evaluation suite makes 22 calls (11 RAG + 11 judge) per run.
 With llama-3.1-8b-instant the free tier limit was 7K tokens per minute, which was not enough.
 Switched to openai/gpt-oss-20b which had an 8K TPM.
 
-Type checker complaints.
-Many of the ChromaDB and Pandas types were product alot of lint errors which had to be ignored with # type: ignore
+Type checker noise.
+ChromaDB's functions don't perfectly match the type stubs and serveral pandas operations product false positives.
+Suppressed with `# type: ignore` after verifying runtime.
 
 ## AI Usage
 
