@@ -6,6 +6,8 @@ pkgs.mkShell {
   buildInputs = with pkgs; [
     python311
     ollama
+    pandoc
+    texliveSmall
 
     stdenv.cc.cc.lib
     zlib
