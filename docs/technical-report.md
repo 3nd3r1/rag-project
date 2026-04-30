@@ -121,6 +121,8 @@ The system went through 8 iterative versions, improving from 3.73 (v6) to 4.82 (
 The one failing query (discount ranking, 3/5) is because the LLM ranked sub-categories by discount rate (percentage) instead of raw count.
 Both are valid interpretations of "frequently sold at a discount."
 
+See [Appendix](#appendix) for screenshots of the chat interface.
+
 ## Challenges and Solutions
 
 Encoding. The Superstore CSV triggered an UnicodeDecodeError on load.
@@ -180,3 +182,9 @@ When it came to actual decisions like how to structure the eval, what ranking te
 ## Appendix
 
 Full RAG answers for all 11 queries: [evaluation-reports/report8.md](./evaluation-reports/report8.md)
+
+### Screenshots
+
+![Screenshot 1](./images/screenshots/1.png)
+![Screenshot 2](./images/screenshots/2.png)
+![Screenshot 3](./images/screenshots/3.png)
