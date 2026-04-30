@@ -99,10 +99,25 @@ Answer based on the context above:
 
 ## Sample Queries and Responses
 
-The system was evaluated with 11 queries across 4 categories using an LLM-as-judge approach.
-Each answer is scored 1–5 against ground truth references and per-query criteria.
-The system went through 8 iterative versions, improving from 3.73 (v6) to 4.82 (v8).
-10 out of 11 queries scored 5/5. Full evaluation history: [evaluations.md](./evaluations.md)
+The system handles 11 queries across 4 categories: trend analysis, category analysis, regional analysis and comparative analysis.
+See [Appendix](#appendix) for screenshots of the chat interface showing actual queries and responses.
+
+### Evaluation
+
+The system was iteratively evaluated using an LLM-as-judge approach.
+For each of the 11 test questions, I first computed the correct answer manually using Python and Pandas on the raw dataset.
+These ground truth values (e.g. "West region: $725,457.82 in sales") serve as the reference.
+Each question also has a set of criteria that define what a good answer should contain (e.g. "identifies the top region with a dollar amount").
+
+The evaluation runs as follows:
+1. The RAG system answers each question normally.
+2. A separate LLM (the judge) receives the question, the ground truth, the criteria and the RAG answer.
+3. The judge scores the answer 1–5 based on factual accuracy against the reference and whether the criteria are met.
+
+This was run iteratively across 8 versions of the system.
+Each time a query scored poorly, I investigated the retrieval results and improved the data preparation or routing logic.
+The system improved from 3.73 (v6) to 4.82 (v8).
+Full evaluation history: [evaluations.md](./evaluations.md)
 
 | Category    | Query                                | Score |
 | ----------- | ------------------------------------ | ----- |
@@ -118,10 +133,9 @@ The system went through 8 iterative versions, improving from 3.73 (v6) to 4.82 (
 | Comparative | Technology vs Furniture trends       | 5/5   |
 | Comparative | West vs East profit                  | 5/5   |
 
+10 out of 11 queries scored 5/5.
 The one failing query (discount ranking, 3/5) is because the LLM ranked sub-categories by discount rate (percentage) instead of raw count.
 Both are valid interpretations of "frequently sold at a discount."
-
-See [Appendix](#appendix) for screenshots of the chat interface.
 
 ## Challenges and Solutions
 
