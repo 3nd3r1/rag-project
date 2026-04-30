@@ -19,10 +19,13 @@ See the [evaluation reports](./docs/evaluations.md) for details.
 # 1. Install dependencies
 pip install -r requirements.txt
 
-# 2. Prepare the vector store
+# 2. Configure an LLM provider (see Providers section below)
+cp .env.example .env  # edit with your provider/key
+
+# 3. Prepare the vector store
 python main.py prepare
 
-# 3. Start chatting
+# 4. Start chatting
 python main.py chat
 ```
 
