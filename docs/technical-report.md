@@ -110,6 +110,7 @@ These ground truth values (e.g. "West region: $725,457.82 in sales") serve as th
 Each question also has a set of criteria that define what a good answer should contain (e.g. "identifies the top region with a dollar amount").
 
 The evaluation runs as follows:
+
 1. The RAG system answers each question normally.
 2. A separate LLM (the judge) receives the question, the ground truth, the criteria and the RAG answer.
 3. The judge scores the answer 1–5 based on factual accuracy against the reference and whether the criteria are met.
@@ -186,6 +187,8 @@ Tools used: Claude.
 ### Running Results
 
 The AI-generated test cases ([commit](https://github.com/3nd3r1/ledger/commit/6211d6bdc7c746642eca2bb250af38ccf889e2fc)) were used to run the first evaluation: [evaluation-reports/report1.md](https://github.com/3nd3r1/ledger/blob/main/docs/evaluation-reports/report1.md).
+
+The logging fix was applied in [commit](https://github.com/3nd3r1/ledger/commit/62b3424).
 
 ### Student Contribution
 
