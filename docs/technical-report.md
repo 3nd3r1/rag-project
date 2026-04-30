@@ -117,7 +117,7 @@ The evaluation runs as follows:
 This was run iteratively across 8 versions of the system.
 Each time a query scored poorly, I investigated the retrieval results and improved the data preparation or routing logic.
 The system improved from 3.73 (v6) to 4.82 (v8).
-Full evaluation history: [evaluations.md](./evaluations.md)
+Full evaluation history: [evaluations.md](https://github.com/3nd3r1/ledger/blob/main/docs/evaluations.md)
 
 | Category    | Query                                | Score |
 | ----------- | ------------------------------------ | ----- |
@@ -185,7 +185,7 @@ Tools used: Claude.
 
 ### Running Results
 
-The AI-generated test cases ([commit](https://github.com/3nd3r1/ledger/commit/6211d6bdc7c746642eca2bb250af38ccf889e2fc)) were used to run the first evaluation: [evaluation-reports/report1.md](./evaluation-reports/report1.md).
+The AI-generated test cases ([commit](https://github.com/3nd3r1/ledger/commit/6211d6bdc7c746642eca2bb250af38ccf889e2fc)) were used to run the first evaluation: [evaluation-reports/report1.md](https://github.com/3nd3r1/ledger/blob/main/docs/evaluation-reports/report1.md).
 
 ### Student Contribution
 
@@ -195,7 +195,7 @@ When it came to actual decisions like how to structure the eval, what ranking te
 
 ## Appendix
 
-Full RAG answers for all 11 queries: [evaluation-reports/report8.md](./evaluation-reports/report8.md)
+Full RAG answers for all 11 queries: [evaluation-reports/report8.md](https://github.com/3nd3r1/ledger/blob/main/docs/evaluation-reports/report8.md)
 
 ### Screenshots
 
