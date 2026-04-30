@@ -2,6 +2,8 @@
 
 Viljami - Data Warehouse - April 2026
 
+Repository: https://github.com/3nd3r1/ledger
+
 ## System Architecture
 
 Ledger is a CLI RAG chatbot that answers questions about the Superstore dataset (9,994 transactions, 2014–2017).
