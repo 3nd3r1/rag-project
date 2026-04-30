@@ -43,12 +43,12 @@ These summaries enable Ledger to answer questions like "total sales in 2016" wit
 The ranking texts were a key addition, without them the system couldn't answer questions like "top states by sales" because cosine similarity doesn't understand numeric ordering.
 Pre-computing the rankings as retrievable text chunks solved this.
 
-Each text document has a type metadata field (e.g., `region_summary`, `year_category_summary`) plus dimension specific fields (e.g., `region`, `year`) that enables metadata filtering.
+Each text document has a type metadata field (e.g., `region_summary`, `year_category_summary`) plus dimension-specific fields (e.g., `region`, `year`) that enables metadata filtering.
 
 Chunking is character-based with a 500-character limit.
-Most summaries fit withing one chunk, so splitting primarily affects the individual row descriptions.
+Most summaries fit within one chunk, so splitting primarily affects the individual row descriptions.
 The chunker preserves metadata across splits so all chunks remain filterable.
-The 500 chunk size was chosen because its small enough for precise retrieval with the 384-dimensions, but large enough to retain meaningful context for all summary types.
+The 500 chunk size was chosen because it's small enough for precise retrieval with the 384-dimensions, but large enough to retain meaningful context for all summary types.
 
 I tested chunk sizes of 500, 1000 and 2000 characters.
 Larger sizes reduced the total chunk count but hurt retrieval precision.
@@ -145,13 +145,13 @@ This was resolved by using latin-1 in pd.read_csv().
 Local model performance.
 Ollama models (Mistral 7B, Phi3) were unusably slow on my hardware. Switched to Groq cloud.
 
-Ranking quries.
+Ranking queries.
 Cosine similarity finds semantically similar text, not the numerically ordered results.
 A query like "top states by sales" would retrieve state summaries in arbitrary order.
 Solved by pre-computing ranking texts at index time so "Top 10 states by sales: 1. California $457K..." exists as a single retrievable chunk.
 
 Insufficient context.
-State and city queries require alot of chunks to cover all relevant informations.
+State and city queries require a lot of chunks to cover all relevant information.
 I experimented with dynamic top_k based on query type, but the results were inconsistent.
 A fixed top_k of 20 gave the best overall performance.
 
